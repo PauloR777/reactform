@@ -15,7 +15,8 @@ const TaskSchema = z.object({
   title3: z.string().trim().min(1, "กรุณากรอกประวัติการทำงาน"),
   title4: z.string().trim().min(1, "กรุณากรอกผลงานที่ผ่านมา"),
   photo: z
-    .any()
+    .instanceof(FileList)
+    .optional()
     .refine(file => !file || file.length <= 1, { message: "กรุณาอัปโหลดรูปถ่าย" }),
   type: z.enum([
     "นายกรัฐมนตรี",
@@ -55,7 +56,7 @@ export default function TodoApp() {
   } = useForm<Task>({
     resolver: zodResolver(TaskSchema),
     defaultValues: { 
-      title1: "", title: "", title2: "", title3: "", title4: "", type: "", type2: "" 
+      title1: "", title: "", title2: "", title3: "", title4: "", type: undefined, type2: undefined 
     },
     mode: "onSubmit",
   });
@@ -70,14 +71,12 @@ export default function TodoApp() {
     }
   }, [photoFile]);
 
-  const onAdd = (data: Task, e: React.BaseSyntheticEvent) => {
-    const fileInput = e.target.photo as HTMLInputElement;
-    const file = fileInput?.files?.[0];
-
+  const onAdd = (data: Task) => {
+    const photoFiles = data.photo;
     let photoURL: string | undefined;
 
-    if (file) {
-      photoURL = URL.createObjectURL(file); // ถ้าเลือกไฟล์ใหม่
+    if (photoFiles && photoFiles.length > 0) {
+      photoURL = URL.createObjectURL(photoFiles[0]);
     } else if (editIndex !== null) {
       photoURL = tasks[editIndex].photoURL; // ถ้าแก้ไข ใช้ของเดิม
     } else {
